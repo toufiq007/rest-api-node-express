@@ -1,31 +1,36 @@
 import mongoose from "mongoose";
 
-const productSchema = mongoose.Schema(
+// create a new schema for product data
+const productSchema = new mongoose.Schema(
   {
-    title: {
+    name: {
       type: String,
       required: true,
     },
     description: {
       type: String,
-      required: true,
     },
     price: {
-      type: String,
+      type: Number,
       required: true,
     },
-
-    ratting: {
-      type: String,
-      required: true,
+    quantity: {
+      type: Number,
+      default: 0,
     },
     category: {
       type: String,
       required: true,
+      enum: ["Electronics", "Books", "Accessories"],
+    },
+    active: {
+      type: Boolean,
+      default: true,
     },
   },
   { timestamps: true }
 );
 
+// model for data manipulation
 const Product = mongoose.model("Product", productSchema);
 export default Product;
