@@ -14,26 +14,39 @@ const getAllProducts = async (req, res) => {
 //  add new products
 const addNewProducts = async (req, res) => {
   try {
-    const { title, description, price, ratting, category } = req.body;
-    if (!title || !description || !price || !ratting || !category) {
-      res.status(404).json({
-        message: "all fields are required",
+    const { name, description, price, quantity, category, active } = req.body;
+    // proper validation added for the required field and enumValues
+    if (!name) {
+      return res.status(422).json({ error: "Name field is required" });
+    }
+    if (!price) {
+      return res.status(422).json({ error: "Price field is required" });
+    }
+    if (!category) {
+      return res.status(422).json({ error: "Category field is required" });
+    } else if (!Product.schema.path("category").enumValues.includes(category)) {
+      return res.status(422).json({
+        error: `Category must be one of these values ${Product.schema
+          .path("category")
+          .enumValues.join(", ")}`,
       });
     }
     const product = await Product.create({
-      title,
+      name,
       description,
       price,
-      ratting,
+      quantity,
       category,
+      active,
     });
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "product added successfully",
       data: product,
     });
   } catch (err) {
     console.log(err);
+    return res.status(500).json({ error: err.message });
   }
 };
 
