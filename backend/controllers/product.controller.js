@@ -70,29 +70,34 @@ const removeProduct = async (req, res) => {
   }
 };
 
-// update product
+// update product -->   not working properly
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
 
-    const updateProduct = await Product.findByIdAndUpdate(id, {
-      title: updateData?.title,
-      description: updateData?.description,
-      price: updateData?.price,
-      ratting: updateData?.ratting,
-      category: updateData?.category,
-    });
-    console.log(updateProduct);
-    if (!updateProduct) {
+    //  find if product is present or nor
+    const findProduct = await Product.findById(id);
+    if (!findProduct) {
       res.status(404).json({
-        message: "failed to update the product",
+        message: "product not found",
       });
     }
+
+    // Update fields
+    Object.keys(updateData).forEach((key) => {
+      findProduct[key] = updateData[key];
+    });
+
+    const updateProduct = await findProduct.save();
+
     res.status(200).json({
-      message: "update product successfully",
+      message: "product updated successfully",
       data: updateProduct,
     });
+
+    //  update the product data
+    console.log(updateProduct);
   } catch (err) {
     console.log(err);
   }
