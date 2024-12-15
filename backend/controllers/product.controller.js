@@ -95,51 +95,77 @@ const removeProduct = async (req, res) => {
 };
 
 // update product
+// const updateProduct = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const updateData = req.body;
+//     const findProduct = await Product.findById(id);
+
+//     // check if any data is passed for update or not
+//     if (!Object.keys(updateData).length) {
+//       return res.status(404).json({ message: "no data found to update" });
+//     }
+//     // find if product is present or not
+//     if (!findProduct) {
+//       res.status(404).json({
+//         message: "product not found",
+//       });
+//     }
+
+//     // method one --> to update the product data
+//     //  update the product data
+//     Object.keys(updateData).forEach((key) => {
+//       if (findProduct[key] !== undefined) {
+//         findProduct[key] = updateData[key];
+//       }
+//     });
+
+//     // method two --> update the product data
+//     // findProduct.title = updateData?.title || findProduct.title;
+//     // findProduct.description =
+//     //   updateData?.description || findProduct.description;
+//     // findProduct.price = updateData?.price || findProduct.price;
+//     // findProduct.ratting = updateData?.ratting || findProduct.ratting;
+//     // findProduct.category = updateData?.category || findProduct.category;
+
+//     const updateProduct = await findProduct.save();
+//     res.status(200).json({
+//       message: "product updated",
+//       data: updateProduct,
+//     });
+//   } catch (err) {
+//     console.error(err); // Log error for debugging
+//     res.status(500).json({
+//       success: false,
+//       message: "An error occurred",
+//       error: err.message,
+//     });
+//   }
+// };
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = req.body;
-    const findProduct = await Product.findById(id);
+    const updatedData = req.body;
 
-    // check if any data is passed for update or not
-    if (!Object.keys(updateData).length) {
-      return res.status(404).json({ message: "no data found to update" });
-    }
-    // find if product is present or not
-    if (!findProduct) {
-      res.status(404).json({
-        message: "product not found",
-      });
+    // check if the parameter is valid mongoose objectid or not
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(422).json({ error: "Parameter is not valid id" });
     }
 
-    // method one --> to update the product data
-    //  update the product data
-    Object.keys(updateData).forEach((key) => {
-      if (findProduct[key] !== undefined) {
-        findProduct[key] = updateData[key];
-      }
+    // check if the product is present in the db or not
+    if (!(await Product.exists({ _id: id }))) {
+      return res.status(404).json({ error: "product not found" });
+    }
+    // if present then update the product
+    const updatedProduct = await Product.findByIdAndUpdate(id, updatedData, {
+      new: true,
     });
-
-    // method two --> update the product data
-    // findProduct.title = updateData?.title || findProduct.title;
-    // findProduct.description =
-    //   updateData?.description || findProduct.description;
-    // findProduct.price = updateData?.price || findProduct.price;
-    // findProduct.ratting = updateData?.ratting || findProduct.ratting;
-    // findProduct.category = updateData?.category || findProduct.category;
-
-    const updateProduct = await findProduct.save();
-    res.status(200).json({
-      message: "product updated",
-      data: updateProduct,
-    });
+    return res
+      .status(200)
+      .json({ message: "updated data successfully", data: updatedProduct });
   } catch (err) {
-    console.error(err); // Log error for debugging
-    res.status(500).json({
-      success: false,
-      message: "An error occurred",
-      error: err.message,
-    });
+    console.log(err);
+    return res.status(500).json({ error: err.message });
   }
 };
 
