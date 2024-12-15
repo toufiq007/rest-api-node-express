@@ -2,12 +2,17 @@ import Product from "../models/product.models.js";
 
 const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find();
+    // get all products from the database by this find method()
+    // also we can specify how many fields should i get back to the client to show by select method
+    // const products = await Product.find().select("_id name price"); // show only id, name and price filed
+    const products = await Product.find().select("-__v"); //  - fieldName which is not showing to the client
+
     res.status(200).json({
       products,
     });
   } catch (err) {
     console.log(err);
+    return res.status(500).json({ error: err.message });
   }
 };
 
