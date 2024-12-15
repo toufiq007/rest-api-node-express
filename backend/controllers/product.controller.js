@@ -84,13 +84,22 @@ const getSingleProduct = async (req, res) => {
 const removeProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const product = await Product.findByIdAndDelete(id);
-    res.status(200).json({
-      message: "product deleted successfully",
-      data: product,
-    });
+    // check mongoose object id validation
+    if (!mongoose.isValidObjectId(id)) {
+      return res
+        .status(422)
+        .json({ error: "Parameter is not valid object id" });
+    }
+    // check if the product is present in the db or not
+    if (!(await Product.exists({ _id: id }))) {
+      return res.status(404).json({ error: "product is not found" });
+    }
+    // if present then it can be deleted
+    await Product.findByIdAndDelete(id);
+    return res.status(204).send();
   } catch (err) {
     console.log(err);
+    return res.status(500).json({ error: err.message });
   }
 };
 
