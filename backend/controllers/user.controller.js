@@ -1,5 +1,6 @@
 import { User } from "../models/user.models.js";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 const register = async (req, res) => {
   try {
@@ -9,6 +10,11 @@ const register = async (req, res) => {
       return res.status(422).json({
         error: "All fields are required like (email,password,userName)",
       });
+    }
+    // check if the email is present in the database or not
+    const findUser = await User.findOne({ email });
+    if (findUser) {
+      return res.status(409).json({ error: `email is already taken` });
     }
     // create user and save to the database
     // password must be hashed before save to the db
@@ -28,7 +34,47 @@ const register = async (req, res) => {
   }
 };
 
+// login controller
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    // check every fields are present or not
+    if (!email || !password) {
+      return res
+        .status(422)
+        .json({ message: "fields (email,password) are required" });
+    }
+    // check this email in the database is present or not
+    const findUser = await User.findOne({ email });
+    if (!findUser) {
+      return res.status(401).json({ error: "email or password is invalid" });
+    }
+    // compare password
+    const isPasswordMatch = await bcrypt.compare(password, findUser.password);
+    if (!isPasswordMatch) {
+      return res.status(401).json({ error: "email or password is invalid" });
+    }
+
+    // all validation is ok and now generate json-web-token
+    const accessToken = jwt.sign(
+      { userId: findUser._id },
+      process.env.ACCESS_TOKEN_SECRETS,
+      { subject: "accessApi", expiresIn: "1d" }
+    );
+    return res.status(200).json({
+      message: "user logged in successfully",
+      id: findUser._id,
+      userName: findUser?.userName,
+      email: findUser?.email,
+      accessToken,
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ error: err.message });
+  }
+};
 
 export const userController = {
-    register
-}
+  register,
+  login
+};
