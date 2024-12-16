@@ -19,9 +19,9 @@ const productSchema = new mongoose.Schema(
       default: 0,
     },
     category: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId, // connected to another mongoose model
+      ref: "Category",
       required: true,
-      enum: ["Electronics", "Books", "Accessories"],
     },
     active: {
       type: Boolean,
