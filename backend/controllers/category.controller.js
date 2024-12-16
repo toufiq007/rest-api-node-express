@@ -21,7 +21,7 @@ const createCategory = async (req, res) => {
 // get category
 const getAllCategory = async (req, res) => {
   try {
-    const categories = await Category.find().select(-__v);
+    const categories = await Category.find().select("-__v");
     return res.status(200).json({ success: true, date: categories });
   } catch (err) {
     console.log(err);
@@ -34,12 +34,16 @@ const updateCategory = async (req, res) => {
   try {
     const { categoryId } = req.params;
     const updateCategory = req.body;
-    if (!mongoose.isValidObjectId(id)) {
+    if (!mongoose.isValidObjectId(categoryId)) {
       return (422).json({ message: "Parameter is not valid id" });
     }
-    const updateData = await Category.findByIdAndUpdate(id, updateCategory, {
-      new: true,
-    });
+    const updateData = await Category.findByIdAndUpdate(
+      categoryId,
+      updateCategory,
+      {
+        new: true,
+      }
+    );
     return res
       .status(200)
       .json({ message: "category updated successfully", data: updateData });
@@ -53,14 +57,14 @@ const updateCategory = async (req, res) => {
 const deleteCategory = async (req, res) => {
   try {
     const { categoryId } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
+    if (!mongoose.isValidObjectId(categoryId)) {
       return res.status(422).json({ error: "Parameter is not valid id" });
     }
-    const findCategory = await Category.findById(id);
+    const findCategory = await Category.findById(categoryId);
     if (!findCategory) {
       return res.status(404).json({ error: "Category not found" });
     }
-    await Category.findByIdAndDelete(id);
+    await Category.findByIdAndDelete(categoryId);
     return res.status(204).send();
   } catch (err) {
     console.log(err);
