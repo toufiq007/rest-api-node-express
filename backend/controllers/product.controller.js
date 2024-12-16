@@ -1,12 +1,15 @@
 import mongoose from "mongoose";
 import Product from "../models/product.models.js";
+import { Category } from "../models/categories.models.js";
 
 const getAllProducts = async (req, res) => {
   try {
     // get all products from the database by this find method()
     // also we can specify how many fields should i get back to the client to show by select method
     // const products = await Product.find().select("_id name price"); // show only id, name and price filed
-    const products = await Product.find().select("-__v"); //  - fieldName which is not showing to the client
+    const products = await Product.find()
+      .select("-__v")
+      .populate({ path: "category", select: "_id name" }); //  - fieldName which is not showing to the client
 
     res.status(200).json({
       products,
@@ -30,12 +33,8 @@ const addNewProducts = async (req, res) => {
     }
     if (!category) {
       return res.status(422).json({ error: "Category field is required" });
-    } else if (!Product.schema.path("category").enumValues.includes(category)) {
-      return res.status(422).json({
-        error: `Category must be one of these values ${Product.schema
-          .path("category")
-          .enumValues.join(", ")}`,
-      });
+    } else if (!(await Category.findById(category))) {
+      return res.status(422).json({ error: "category not found" });
     }
     const product = await Product.create({
       name,
@@ -64,7 +63,9 @@ const getSingleProduct = async (req, res) => {
     if (!mongoose.isValidObjectId(id)) {
       return res.status(422).json({ error: `Parameter is not valid id` });
     }
-    const findProduct = await Product.findById(id).select("-__v");
+    const findProduct = await Product.findById(id)
+      .select("-__v")
+      .populate({ path: "category", select: "_id name" });
     if (!findProduct) {
       return res.status(404).json({
         message: "product not found!!",
@@ -178,10 +179,36 @@ const updateProduct = async (req, res) => {
   }
 };
 
+// get products by category
+const getProductsByCategory = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    if (!(await Category.findById(categoryId))) {
+      return res.status(404).json({ error: "Category not found" });
+    }
+    const products = await Product.find({ category: categoryId })
+      .select("-__v")
+      .populate({ path: "category", select: "_id name" });
+    if (products.length <= 0) {
+      return res
+        .status(404)
+        .json({ error: "products not found of this category" });
+    }
+    return res.status(200).json({
+      success: true,
+      data: products,
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ error: err.message });
+  }
+};
+
 export const productController = {
   getAllProducts,
   addNewProducts,
   getSingleProduct,
   removeProduct,
   updateProduct,
+  getProductsByCategory,
 };
