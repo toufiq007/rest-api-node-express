@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { Category } from "../models/categories.models.js";
+import Product from "../models/product.models.js";
 
 // created category
 const createCategory = async (req, res) => {
@@ -73,6 +74,16 @@ const deleteCategory = async (req, res) => {
     if (!findCategory) {
       return res.status(404).json({ error: "Category not found" });
     }
+    // before deleting the category must check if the category is using any products or not
+    // if present then this category couldn't be deleted
+    const productCount = await Product.countDocuments({ category: categoryId });
+    console.log(productCount);
+    if (productCount > 0) {
+      return res.status(409).json({
+        error: `category ${findCategory.name} is used in ${productCount} product(s)`,
+      });
+    }
+    // if the category is not using any products then it can be deleted
     await Category.findByIdAndDelete(categoryId);
     return res.status(204).send();
   } catch (err) {
