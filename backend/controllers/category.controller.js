@@ -8,6 +8,15 @@ const createCategory = async (req, res) => {
     if (!name) {
       return res.status(422).json({ error: "name is required!" });
     }
+    const findCategory = await Category.findOne({ name });
+    // check if the category is already present or not
+    // if present then send error
+    if (findCategory) {
+      return res
+        .status(409)
+        .json({ error: `Category ${name} is already present` });
+    }
+    // if not then create the category
     const category = await Category.create({ name });
     return res
       .status(200)
