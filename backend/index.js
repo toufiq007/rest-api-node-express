@@ -13,7 +13,7 @@ connectDb();
 app.use(express.json());
 
 // router setup
-app.use("/api/auth", authRoutes);
+app.use("/api", authRoutes);
 
 const port = process.env.PORT || 5000;
 

@@ -74,7 +74,31 @@ const login = async (req, res) => {
   }
 };
 
+// this is the protected route
+// if the user send verified accesstoken then this route can be accessbile otherwise got unauthorized error
+const getUserProfile = async (req, res) => {
+  try {
+    const { id } = req.user;
+    const findUser = await User.findById(id);
+    if (!findUser) {
+      return res.status(500).json({ error: "invalid access token" });
+    }
+    return res
+      .status(200)
+      .json({
+        success: true,
+        id: findUser._id,
+        email: findUser.email,
+        userName: findUser.userName,
+      });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ error: err.message });
+  }
+};
+
 export const userController = {
   register,
-  login
+  login,
+  getUserProfile,
 };
