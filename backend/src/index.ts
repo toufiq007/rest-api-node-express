@@ -4,7 +4,7 @@ import connectDb from "./db/db.config";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./middlewares/errorHandler";
-import { catchError } from "./utils/catchError";
+import authRoutes from "./routes/auth.routes";
 dotenv.config();
 
 // connected our database
@@ -23,15 +23,11 @@ app.use(
 );
 app.use(cookieParser());
 
+// routs
+app.use('/api/auth',authRoutes)
+
 const port = process.env.PORT || 5000;
 
-app.get(
-  "/",
-  catchError(async (req: Request, res: Response) => {
-    res.status(200).json({ message: "successfull" });
-    return;
-  })
-);
 
 // error handler middleware
 app.use(errorHandler);
