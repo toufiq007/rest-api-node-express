@@ -19,6 +19,8 @@ const registerHandler = catchError(async (req, res, next) => {
     ...req.body,
     userAgent: req.headers["user-agent"],
   });
+
+  // services
 });
 
 export const authController = {
