@@ -1,6 +1,7 @@
 import { User } from "../models/user.models.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { UserRefreshToken } from "../models/user.refresh.model.js";
 
 // get all user
 const getAllUsers = async (req, res) => {
@@ -68,11 +69,22 @@ const login = async (req, res) => {
     }
 
     // all validation is ok and now generate json-web-token
+    // send access token to the user
     const accessToken = jwt.sign(
       { userId: findUser._id },
       process.env.ACCESS_TOKEN_SECRETS,
-      { subject: "accessApi", expiresIn: "1d" }
+      { subject: "accessApi", expiresIn: "1m" }
     );
+    // send refresh token to the user
+    const refreshToken = jwt.sign(
+      { userId: findUser._id },
+      process.env.REFRESH_TOKEN_SECRETS,
+      { subject: "refreshApi", expiresIn: "5d" }
+    );
+
+    // also save this refreshToken to the db with the userId to the user
+    await UserRefreshToken.create({ userId: findUser._id, refreshToken });
+
     return res.status(200).json({
       message: "user logged in successfully",
       id: findUser._id,
@@ -80,6 +92,7 @@ const login = async (req, res) => {
       email: findUser?.email,
       role: findUser?.role,
       accessToken,
+      refreshToken,
     });
   } catch (err) {
     console.log(err);
@@ -150,6 +163,69 @@ const getAdminOrModerator = async (req, res) => {
     .json({ message: "Only admin and moderator can be access this routes" });
 };
 
+// routs for refreshToken
+const refreshToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      return res.status(401).json({ error: "Refresh token not found" });
+    }
+    // verify the old refresh token
+    const decodedRefreshToken = jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRETS
+    );
+
+    // check the refresh token is present in the db or not
+    const userRefreshToken = await UserRefreshToken.findOne({
+      refreshToken,
+      userId: decodedRefreshToken.userId,
+    });
+
+    if (!userRefreshToken) {
+      return res
+        .status(401)
+        .json({ message: "refresh token is invalid or expired" });
+    }
+    // remove the previous refresh token
+    await userRefreshToken.deleteOne({
+      _id: userRefreshToken._id,
+    }); 
+    console.log(userRefreshToken);
+
+    // after verification then generate a newAccessToken and newRefreshToken and send back this to the response
+    const accessToken = jwt.sign(
+      { userId: decodedRefreshToken.userId },
+      process.env.ACCESS_TOKEN_SECRETS,
+      { subject: "accessToken", expiresIn: "1m" }
+    );
+    const newRefreshToken = jwt.sign(
+      { userId: decodedRefreshToken.userId },
+      process.env.REFRESH_TOKEN_SECRETS,
+      { subject: "refreshToken", expiresIn: "5d" }
+    );
+
+    // save the newGenerate new refresh token to the db
+    await UserRefreshToken.create({userId:decodedRefreshToken.userId,refreshToken:newRefreshToken})
+    return res.status(200).json({
+      accessToken,
+      refreshToken: newRefreshToken,
+    });
+  } catch (err) {
+    // if the error comes from jwt.verify then it should be the error
+    if (
+      err instanceof jwt.JsonWebTokenError ||
+      err instanceof jwt.TokenExpiredError
+    ) {
+      return res
+        .status(401)
+        .json({ message: "refresh token is invalid or expired" });
+    }
+    console.log(err);
+    return res.status(500).json({ error: err.message });
+  }
+};
+
 export const userController = {
   getAllUsers,
   register,
@@ -157,4 +233,5 @@ export const userController = {
   getUserProfile,
   getAdminUser,
   getAdminOrModerator,
+  refreshToken,
 };
