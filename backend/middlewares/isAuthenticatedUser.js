@@ -16,6 +16,16 @@ export const isAuthenticatedUser = async (req, res, next) => {
 
     next();
   } catch (err) {
-    return res.status(401).json({ error: "unauthorized user" });
+    if (err instanceof jwt.TokenExpiredError) {
+      return res
+        .status(401)
+        .json({ error: "Token is expired", code: "AccessTokenExpired" });
+    } else if (err instanceof jwt.JsonWebTokenError) {
+      return res
+        .status(401)
+        .json({ error: "Token is invalid", code: "AccessTokenInvalid" });
+    } else {
+      return res.status(500).json({ error: err.message });
+    }
   }
 };
