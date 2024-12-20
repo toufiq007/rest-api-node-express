@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { UserInvalidToken } from "../models/user.invalidToken";
 
 // this is the middlewares to check if the user send verified accessToken or not
 export const isAuthenticatedUser = async (req, res, next) => {
@@ -6,6 +7,9 @@ export const isAuthenticatedUser = async (req, res, next) => {
     const acceesToken = req.headers.authorization;
     if (!acceesToken) {
       return res.status(401).json({ error: "token not found" });
+    }
+    if (await UserInvalidToken.findOne({acceesToken})) {
+      return res.status(401).json({ error: "Token is invalid", code: "AccessTokenInvalid" });
     }
     const decodedToken = jwt.verify(
       acceesToken,

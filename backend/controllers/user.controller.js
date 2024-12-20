@@ -240,7 +240,7 @@ const logout = async (req, res) => {
     // and also save this refresh token to the invalidToken collection
     await UserInvalidToken.create({
       userId: req.user.id,
-      refreshToken: req.accessToken.value,
+      accessToken: req.accessToken.value,
       exprirationTime: req.accessToken.expirationTime,
     });
 
