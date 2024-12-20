@@ -2,6 +2,7 @@ import { User } from "../models/user.models.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { UserRefreshToken } from "../models/user.refresh.model.js";
+import { UserInvalidToken } from "../models/user.invalidToken.js";
 
 // get all user
 const getAllUsers = async (req, res) => {
@@ -190,7 +191,7 @@ const refreshToken = async (req, res) => {
     // remove the previous refresh token
     await userRefreshToken.deleteOne({
       _id: userRefreshToken._id,
-    }); 
+    });
     console.log(userRefreshToken);
 
     // after verification then generate a newAccessToken and newRefreshToken and send back this to the response
@@ -206,7 +207,10 @@ const refreshToken = async (req, res) => {
     );
 
     // save the newGenerate new refresh token to the db
-    await UserRefreshToken.create({userId:decodedRefreshToken.userId,refreshToken:newRefreshToken})
+    await UserRefreshToken.create({
+      userId: decodedRefreshToken.userId,
+      refreshToken: newRefreshToken,
+    });
     return res.status(200).json({
       accessToken,
       refreshToken: newRefreshToken,
@@ -226,6 +230,28 @@ const refreshToken = async (req, res) => {
   }
 };
 
+// logout routes
+const logout = async (req, res) => {
+  try {
+    console.log(req.accessToken)
+    // remove every refresh token from the refreshToken collection
+    await UserRefreshToken.deleteMany({ userId: req.user.id });
+
+    // and also save this refresh token to the invalidToken collection
+    await UserInvalidToken.create({
+      userId: req.user.id,
+      refreshToken: req.accessToken.value,
+      exprirationTime: req.accessToken.expirationTime,
+    });
+
+    // return response to the client
+    return res.status(204).send();
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ error: err.message });
+  }
+};
+
 export const userController = {
   getAllUsers,
   register,
@@ -234,4 +260,5 @@ export const userController = {
   getAdminUser,
   getAdminOrModerator,
   refreshToken,
+  logout,
 };

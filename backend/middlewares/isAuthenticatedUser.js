@@ -11,6 +11,8 @@ export const isAuthenticatedUser = async (req, res, next) => {
       acceesToken,
       process.env.ACCESS_TOKEN_SECRETS
     );
+    // set also access token to the token
+    req.accessToken = {value:acceesToken,expirationTime:decodedToken.exp}
     // set userId so that in controller user can be found from db by this id
     req.user = { id: decodedToken.userId };
 
