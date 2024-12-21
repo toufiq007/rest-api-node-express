@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { UserRefreshToken } from "../models/user.refresh.model.js";
 import { UserInvalidToken } from "../models/user.invalidToken.js";
+import {authenticator} from "otplib"
+import qrCode from "qrcode"
 
 // get all user
 const getAllUsers = async (req, res) => {
@@ -230,6 +232,18 @@ const refreshToken = async (req, res) => {
   }
 };
 
+// routes for 2FA
+const twoFactorAuthentication = async (req,res)=>{
+  try{
+    // find logged in user
+    const user = await User.find({_id: req.user.id})
+
+  }catch(err){
+    console.log(err)
+    return res.status(500).json({error:err.message})
+  }
+}
+
 // logout routes
 const logout = async (req, res) => {
   try {
@@ -261,4 +275,5 @@ export const userController = {
   getAdminOrModerator,
   refreshToken,
   logout,
+  twoFactorAuthentication
 };
