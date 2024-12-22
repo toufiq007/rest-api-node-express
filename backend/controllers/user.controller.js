@@ -3,8 +3,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { UserRefreshToken } from "../models/user.refresh.model.js";
 import { UserInvalidToken } from "../models/user.invalidToken.js";
-import {authenticator} from "otplib"
-import qrCode from "qrcode"
+import { authenticator } from "otplib";
+import qrcode from "qrcode";
 
 // get all user
 const getAllUsers = async (req, res) => {
@@ -233,21 +233,58 @@ const refreshToken = async (req, res) => {
 };
 
 // routes for 2FA
-const twoFactorAuthentication = async (req,res)=>{
-  try{
-    // find logged in user
-    const user = await User.find({_id: req.user.id})
+const twoFactorAuthentication = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    const secret = authenticator.generateSecret();
+    const uri = authenticator.keyuri(user.email, "toufiq.io", secret);
 
-  }catch(err){
-    console.log(err)
-    return res.status(500).json({error:err.message})
+    // update the user
+    await User.updateOne(
+      { _id: req.user.id },
+      { $set: { "2faSecret": secret } }
+    );
+
+    // generate qrcode
+    const qrCode = await qrcode.toBuffer(uri, { type: "image/png", margin: 1 });
+    res.setHeader("Content-Disposition", "attachment; filename=qrcode.png");
+    return res.status(200).type("image/png").send(qrCode);
+  } catch (err) {
+    console.log(err);
   }
-}
+};
+// const twoFactorAuthentication = async (req, res) => {
+
+// try {
+//   // Find the logged-in user
+//   const user = await User.findById(req.user.id);
+//   if (!user) {
+//     return res.status(404).json({ message: "User not found" });
+//   }
+//   // Generate the secret
+//   const secret = authenticator.generateSecret();
+//   const uri = authenticator.keyuri(user.email, "toufiq.io", secret);
+
+//   // Update the user with the new 2faSecret
+//   await User.updateOne({ _id: req.user.id }, { $set: { twoFactorSecret: secret } });
+
+//   // Generate the QR code
+//   const qrCode = await qrcode.toBuffer(uri, { type: "image/png", margin: 1 });
+
+//   // Set the response headers and send the QR code as a downloadable file
+//   res.setHeader("Content-Disposition", "attachment; filename=qrcode.png");
+//   return res.status(200).type("image/png").send(qrCode);
+// } catch (error) {
+//   console.error("Error enabling 2FA:", error);
+//   return res.status(500).json({ message: "An error occurred while enabling 2FA" });
+// }
+
+// };
 
 // logout routes
 const logout = async (req, res) => {
   try {
-    console.log(req.accessToken)
+    console.log(req.accessToken);
     // remove every refresh token from the refreshToken collection
     await UserRefreshToken.deleteMany({ userId: req.user.id });
 
@@ -275,5 +312,5 @@ export const userController = {
   getAdminOrModerator,
   refreshToken,
   logout,
-  twoFactorAuthentication
+  twoFactorAuthentication,
 };
