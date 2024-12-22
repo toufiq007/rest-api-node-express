@@ -76,7 +76,7 @@ const login = async (req, res) => {
     const accessToken = jwt.sign(
       { userId: findUser._id },
       process.env.ACCESS_TOKEN_SECRETS,
-      { subject: "accessApi", expiresIn: "1m" }
+      { subject: "accessApi", expiresIn: "1h" }
     );
     // send refresh token to the user
     const refreshToken = jwt.sign(
@@ -232,6 +232,26 @@ const refreshToken = async (req, res) => {
   }
 };
 
+// validate two factor authentication
+const validateTwoFactorAuthentication = async (req, res) => {
+  try {
+    const { totp } = req.body;
+    if (!totp) {
+      return res.status(422).json({ message: "totp is required" });
+    }
+    const user = await User.findOne({ _id: req.user.id });
+    const verified = authenticator.check(totp, user["2faSecret"]);
+    if (!verified) {
+      return res.status(400).json({ message: "TOPT is not valid or expired" });
+    }
+
+    await User.updateOne({ _id: req.user.id }, { $set: { "2faEnable": true } });
+    return res.status(200).json({ message: "totp valided successfully" });
+  } catch (err) {
+    console.log(err);
+  }
+};
+
 // routes for 2FA
 const twoFactorAuthentication = async (req, res) => {
   try {
@@ -253,33 +273,6 @@ const twoFactorAuthentication = async (req, res) => {
     console.log(err);
   }
 };
-// const twoFactorAuthentication = async (req, res) => {
-
-// try {
-//   // Find the logged-in user
-//   const user = await User.findById(req.user.id);
-//   if (!user) {
-//     return res.status(404).json({ message: "User not found" });
-//   }
-//   // Generate the secret
-//   const secret = authenticator.generateSecret();
-//   const uri = authenticator.keyuri(user.email, "toufiq.io", secret);
-
-//   // Update the user with the new 2faSecret
-//   await User.updateOne({ _id: req.user.id }, { $set: { twoFactorSecret: secret } });
-
-//   // Generate the QR code
-//   const qrCode = await qrcode.toBuffer(uri, { type: "image/png", margin: 1 });
-
-//   // Set the response headers and send the QR code as a downloadable file
-//   res.setHeader("Content-Disposition", "attachment; filename=qrcode.png");
-//   return res.status(200).type("image/png").send(qrCode);
-// } catch (error) {
-//   console.error("Error enabling 2FA:", error);
-//   return res.status(500).json({ message: "An error occurred while enabling 2FA" });
-// }
-
-// };
 
 // logout routes
 const logout = async (req, res) => {
@@ -313,4 +306,5 @@ export const userController = {
   refreshToken,
   logout,
   twoFactorAuthentication,
+  validateTwoFactorAuthentication,
 };
