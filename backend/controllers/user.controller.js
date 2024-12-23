@@ -3,8 +3,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { UserRefreshToken } from "../models/user.refresh.model.js";
 import { UserInvalidToken } from "../models/user.invalidToken.js";
-import {authenticator} from "otplib"
-import qrCode from "qrcode"
+import { authenticator } from "otplib";
+import qrcode from "qrcode";
 
 // get all user
 const getAllUsers = async (req, res) => {
@@ -76,7 +76,7 @@ const login = async (req, res) => {
     const accessToken = jwt.sign(
       { userId: findUser._id },
       process.env.ACCESS_TOKEN_SECRETS,
-      { subject: "accessApi", expiresIn: "1m" }
+      { subject: "accessApi", expiresIn: "1h" }
     );
     // send refresh token to the user
     const refreshToken = jwt.sign(
@@ -232,22 +232,52 @@ const refreshToken = async (req, res) => {
   }
 };
 
-// routes for 2FA
-const twoFactorAuthentication = async (req,res)=>{
-  try{
-    // find logged in user
-    const user = await User.find({_id: req.user.id})
+// validate two factor authentication
+const validateTwoFactorAuthentication = async (req, res) => {
+  try {
+    const { totp } = req.body;
+    if (!totp) {
+      return res.status(422).json({ message: "totp is required" });
+    }
+    const user = await User.findOne({ _id: req.user.id });
+    const verified = authenticator.check(totp, user["2faSecret"]);
+    if (!verified) {
+      return res.status(400).json({ message: "TOPT is not valid or expired" });
+    }
 
-  }catch(err){
-    console.log(err)
-    return res.status(500).json({error:err.message})
+    await User.updateOne({ _id: req.user.id }, { $set: { "2faEnable": true } });
+    return res.status(200).json({ message: "totp valided successfully" });
+  } catch (err) {
+    console.log(err);
   }
-}
+};
+
+// routes for 2FA
+const twoFactorAuthentication = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    const secret = authenticator.generateSecret();
+    const uri = authenticator.keyuri(user.email, "toufiq.io", secret);
+
+    // update the user
+    await User.updateOne(
+      { _id: req.user.id },
+      { $set: { "2faSecret": secret } }
+    );
+
+    // generate qrcode
+    const qrCode = await qrcode.toBuffer(uri, { type: "image/png", margin: 1 });
+    res.setHeader("Content-Disposition", "attachment; filename=qrcode.png");
+    return res.status(200).type("image/png").send(qrCode);
+  } catch (err) {
+    console.log(err);
+  }
+};
 
 // logout routes
 const logout = async (req, res) => {
   try {
-    console.log(req.accessToken)
+    console.log(req.accessToken);
     // remove every refresh token from the refreshToken collection
     await UserRefreshToken.deleteMany({ userId: req.user.id });
 
@@ -275,5 +305,6 @@ export const userController = {
   getAdminOrModerator,
   refreshToken,
   logout,
-  twoFactorAuthentication
+  twoFactorAuthentication,
+  validateTwoFactorAuthentication,
 };

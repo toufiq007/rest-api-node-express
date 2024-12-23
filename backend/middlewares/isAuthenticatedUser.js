@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { UserInvalidToken } from "../models/user.invalidToken";
+import { UserInvalidToken } from "../models/user.invalidToken.js";
 
 // this is the middlewares to check if the user send verified accessToken or not
 export const isAuthenticatedUser = async (req, res, next) => {

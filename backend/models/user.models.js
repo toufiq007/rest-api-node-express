@@ -18,6 +18,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "member",
     },
+    "2faEnable" : {
+      type:Boolean,
+      default:false
+    },
+    "2faSecret" : {
+      type:String,
+      default:null
+    }
   },
   { timestamps: true }
 );
