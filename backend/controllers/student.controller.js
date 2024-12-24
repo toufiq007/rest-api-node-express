@@ -3,12 +3,15 @@ import { StudentModel } from "../models/student.models.js";
 const registerStudent = async (req, res) => {
   try {
     const { name, age, phone, email, address } = req.body;
+    console.log(req.file)
+    const photoPath = req.file.path
     const newStudent = await StudentModel.create({
       name,
       age,
       phone,
       email,
       address,
+      photo:photoPath
     });
     return res
       .status(200)
