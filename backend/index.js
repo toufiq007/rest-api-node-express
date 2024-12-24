@@ -1,6 +1,8 @@
 import express from "express";
 import dotenv from "dotenv";
 import connectDb from "./db/db.config.js";
+import studentRoutes from "./routes/student.routes.js";
+import bodyParser from "body-parser";
 dotenv.config();
 
 const app = express();
@@ -10,9 +12,10 @@ connectDb();
 
 // middlewares
 app.use(express.json());
+app.use(bodyParser.json())
 
 // router setup
-// app.use("/api", authRoutes);
+app.use("/api", studentRoutes);
 
 const port = process.env.PORT || 5000;
 
