@@ -1,9 +1,13 @@
-import express from "express"
-import { studentController } from "../controllers/student.controller.js"
+import express from "express";
+import { studentController } from "../controllers/student.controller.js";
+import { upload } from "../middlewares/uploadFile.js";
 
+const router = express.Router();
 
-const router = express.Router()
+router.post(
+  "/create-student",
+  upload.single("image"),
+  studentController.registerStudent
+);
 
-router.post('/create-student',studentController.registerStudent)
- 
-export default router
+export default router;
