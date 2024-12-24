@@ -1,6 +1,5 @@
 import express from "express";
 import dotenv from "dotenv";
-import authRoutes from "./routes/user.routes.js";
 import connectDb from "./db/db.config.js";
 dotenv.config();
 
@@ -13,7 +12,7 @@ connectDb();
 app.use(express.json());
 
 // router setup
-app.use("/api", authRoutes);
+// app.use("/api", authRoutes);
 
 const port = process.env.PORT || 5000;
 
