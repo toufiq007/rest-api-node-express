@@ -11,36 +11,49 @@ const RegisterUser: React.FC = () => {
   } = useForm<StudentFormData>();
 
   const onSubmit: SubmitHandler<StudentFormData> = async (data) => {
-    // create a instance of formData for sending your form details
-    const formData = new FormData();
-
-    // append the text files
-    formData.append("name", data.name);
-    formData.append("age", data.age);
-    formData.append("email", data.email);
-    formData.append("phone", data.phone);
-    formData.append("address", data.address);
-
-    // append the image files
-    if (data.phone && data.photo?.length) {
-      formData.append("photo", data.photo[0]);
-    }
-
-    // now make the post request
     try {
-      const response = await axios.post(
-        "http://localhost:3000/api/create-student",
-        formData,
-        { method: "POST" }
-      );
-      if (response.status === 201) {
-        console.log("student register successfull");
+      // Create a FormData instance
+      const formData = new FormData();
+  
+      // Append text fields (convert non-string types to strings)
+      formData.append("name", data.name);
+      formData.append("age", String(data.age));
+      formData.append("email", data.email);
+      formData.append("phone", data.phone);
+      formData.append("address", data.address);
+  
+      // Append file (if exists)
+      if (data.photo && data.photo.length > 0) {
+        formData.append("photo", data.photo[0]);
       }
-    } catch (err) {
-      console.log(err);
+  
+      // Log the form data for debugging
+      // console.log("FormData content:");
+      for (const [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
+  
+      // Make the POST request to your backend
+      const response = await axios.post(
+        "http://localhost:3000/api/create-student", // Replace with your API endpoint
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data", // Ensure correct Content-Type for file upload
+          },
+        }
+      );
+  
+      // Handle the response
+      if (response.status === 200) {
+        console.log("Student registered successfully!", response.data);
+      } else {
+        console.error("Failed to register student:", response.statusText);
+      }
+    } catch (error) {
+      // Handle errors
+      console.error("An error occurred during registration:", error);
     }
-
-    console.log("Form Data:", data);
   };
 
   return (
@@ -48,6 +61,7 @@ const RegisterUser: React.FC = () => {
       <form
         className="w-full max-w-md bg-white p-6 rounded-lg shadow-md"
         onSubmit={handleSubmit(onSubmit)}
+        encType="multipart/form-data"
       >
         <h2 className="text-2xl font-bold text-center mb-6">
           Register Student
