@@ -1,8 +1,8 @@
 export interface StudentFormData {
   name: string;
-  age: number;
+  age: string;
   phone: string;
   email: string;
   address: string;
-  profilePic: FileList | null;
+  photo: FileList | null;
 }
