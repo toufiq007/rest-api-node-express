@@ -11,49 +11,27 @@ const RegisterUser: React.FC = () => {
   } = useForm<StudentFormData>();
 
   const onSubmit: SubmitHandler<StudentFormData> = async (data) => {
-    try {
-      // Create a FormData instance
-      const formData = new FormData();
-  
-      // Append text fields (convert non-string types to strings)
-      formData.append("name", data.name);
-      formData.append("age", String(data.age));
-      formData.append("email", data.email);
-      formData.append("phone", data.phone);
-      formData.append("address", data.address);
-  
-      // Append file (if exists)
-      if (data.photo && data.photo.length > 0) {
-        formData.append("photo", data.photo[0]);
-      }
-  
-      // Log the form data for debugging
-      // console.log("FormData content:");
-      for (const [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
-  
-      // Make the POST request to your backend
-      const response = await axios.post(
-        "http://localhost:3000/api/create-student", // Replace with your API endpoint
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data", // Ensure correct Content-Type for file upload
-          },
-        }
-      );
-  
-      // Handle the response
-      if (response.status === 200) {
-        console.log("Student registered successfully!", response.data);
-      } else {
-        console.error("Failed to register student:", response.statusText);
-      }
-    } catch (error) {
-      // Handle errors
-      console.error("An error occurred during registration:", error);
+    // when you send only plain text then you can send this easilty like this
+    // const payload = data;
+    
+    // append file types
+    const formData = new FormData()
+
+    formData.append("name",data.name)
+    formData.append("email",data.email)
+    formData.append("age",data.age)
+    formData.append("address",data.address)
+
+    if (data.photo && data.photo.length > 0){
+      formData.append("photo",data.photo[0])
     }
+
+    const response = await axios.post(
+      "http://localhost:3000/api/create-student",
+      formData
+    );
+
+    console.log(response);
   };
 
   return (

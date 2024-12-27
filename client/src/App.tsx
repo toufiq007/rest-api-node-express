@@ -1,4 +1,5 @@
 import "./App.css";
+import GetAllStudents from "./components/GetAllStudents";
 import RegisterUser from "./components/RegisterUser";
 
 function App() {
@@ -6,6 +7,7 @@ function App() {
     <>
       <h2>Learning rest api with node express and mongodb</h2>
       <RegisterUser/>
+      <GetAllStudents />
     </>
   );
 }

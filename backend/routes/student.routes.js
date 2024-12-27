@@ -4,6 +4,10 @@ import { upload } from "../middlewares/uploadFile.js";
 
 const router = express.Router();
 
-router.post("/create-student", studentController.registerStudent);
+router.post(
+  "/create-student",
+  upload.single("photo"),
+  studentController.registerStudent
+);
 
 export default router;

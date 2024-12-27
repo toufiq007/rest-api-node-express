@@ -15,7 +15,10 @@ connectDb();
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(cors());
-app.use(express.urlencoded({extended:true}))
+app.use(express.urlencoded({ extended: true }));
+
+// for our static file --> this data will be accessed file client
+app.use(express.static("profile"));
 
 // router setup
 app.use("/api", studentRoutes);
