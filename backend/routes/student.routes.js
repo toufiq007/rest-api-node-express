@@ -6,8 +6,9 @@ const router = express.Router();
 
 router.post(
   "/create-student",
-  upload.single("image"),
+  upload.single("photo"),
   studentController.registerStudent
 );
+router.get("/get-students", studentController.getAllStudents);
 
 export default router;
