@@ -9,5 +9,6 @@ router.post(
   upload.single("photo"),
   studentController.registerStudent
 );
+router.get("/get-students", studentController.getAllStudents);
 
 export default router;

@@ -12,18 +12,23 @@ const GetAllStudents = () => {
         console.error("Error fetching students:", error);
       });
   }, []);
+  console.log(students);
   return (
     <div>
       <h2>all students</h2>
-      {
-        students.data?.map(student=> (
-            <div>
-                <p>{student.name}</p>
-                <p>{student.email}</p>
-                {/* <img src={`${student.photo}`} alt="" /> */}
-            </div>
-        ))
-      }
+      <div style={{display:"flex",justifyContent:"space-between",flexWrap:"wrap"}}>
+      {students.data?.map((student) => (
+        <div>
+          <img
+            src={`http://localhost:3000/${student.photo}`}
+            width={300}
+            height={300}
+            style={{ objectFit: "cover" }}
+            alt=""
+          />
+        </div>
+      ))}
+      </div>
     </div>
   );
 };

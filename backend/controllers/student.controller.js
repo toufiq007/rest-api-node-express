@@ -12,9 +12,9 @@ const registerStudent = async (req, res) => {
       phone,
       email,
       address,
-      photo:photoPath
+      photo: photoPath,
     });
-    console.log(newStudent)
+    console.log(newStudent);
     return res
       .status(201)
       .json({ message: "student created successfully", data: newStudent });
@@ -24,6 +24,17 @@ const registerStudent = async (req, res) => {
   }
 };
 
+const getAllStudents = async (req, res) => {
+  try {
+    const allUsers = await StudentModel.find();
+    return res.status(200).json({ message: "success", data: allUsers });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 export const studentController = {
   registerStudent,
+  getAllStudents
 };
